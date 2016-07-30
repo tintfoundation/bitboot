@@ -97,7 +97,7 @@ Bitboot.prototype._search = function() {
 };
 
 Bitboot.prototype._attemptCommunication = function() {
-   var closest = this.dht.nodes.closest(this.rallyId, 30);
+   var closest = this.dht.nodes.closest(this.rallyId, 40);
    var peers = this._extractPeers(closest);
    var mydist = KBucket.distance(this.dht.nodeId, this.rallyId);
    var closestdist = KBucket.distance(closest[0].id, this.rallyId);
@@ -109,10 +109,10 @@ Bitboot.prototype._attemptCommunication = function() {
       this.debug("We're already at the rally point. Keep hanging out.");
    } else if(peers.length == 0) {
       this.debug("No peers found, so it's up to us to hang out at the rally point");
-      this._waddleCloser(closest[0]);
+      this._waddleCloser(closest);
    } else if(!peers[0].id.equals(closest[0].id) && mydist > closestdist) {
       this.debug("Peers exist but far away - it's up to us to go to the rally point");
-      this._waddleCloser(closest[0]);
+      this._waddleCloser(closest);
    } else if(peers[0].id.equals(closest[0].id)) {
       this.debug("Another peer is already at the rally point - so we won't move.");
    }
@@ -125,8 +125,16 @@ Bitboot.prototype._waddleCloser = function(closest) {
    
    function restart() {
       self.debug("Old DHT connection destroyed");
-      var id = twiddle_march(self.rallyId, closest, self.dht.nodeId);
+      var id = twiddle_march(self.rallyId, closest[0].id, self.dht.nodeId);
       self.dht = self._createDHT(id);
+      self.dht.on('ready', sayhi)
+   }
+
+   // make sure other close nodes know about us
+   function sayhi() {
+      self.debug("Saying hi to " + closest.length + " nodes so they know about us");
+      for(var i=0; i<closest.length; i++)
+	 self.dht.addNode(closest[i]);
    }
 };
 
