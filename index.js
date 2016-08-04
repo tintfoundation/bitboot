@@ -33,6 +33,8 @@ function Bitboot(rallyName, opts) {
 	 return;
 
       var id = crypto.randomBytes(20);
+      id[0] = self.rallyId[0];
+      id[1] = self.rallyId[1];
       id[18] = self.rallyId[18];
       id[19] = self.rallyId[19];
       self.dht = self._createDHT(id);
@@ -54,8 +56,10 @@ Bitboot.prototype.destroy = function(cb) {
 Bitboot.prototype._createDHT = function(id) {
    var dht = new DHT({id: id});
    var self = this;
+   var dmsg = "Joining network with id " + id.toString('hex') +
+      " (distance to rally " + KBucket.distance(id, this.rallyId) + ")";
+   this.debug(dmsg);
 
-   this.debug("Attempting to join network with id " + id.toString('hex'));
    dht.on('error', onerror);
    dht.on('ready', onready);
 
@@ -69,7 +73,7 @@ Bitboot.prototype._createDHT = function(id) {
 	 // first run, so search and set interval for future searches
 	 self.debug("Searching, and creating interval for future searches");
 	 search();
-	 self._interval = setInterval(search, 1000 * 60 * 3);
+	 self._interval = setInterval(search, 1000 * 60);
       }
    }
 
@@ -109,6 +113,7 @@ Bitboot.prototype._attemptCommunication = function() {
       this.debug("We're already at the rally point. Keep hanging out.");
    } else if(peers.length == 0) {
       this.debug("No peers found, so it's up to us to hang out at the rally point");
+      this.debug("The closest other node is " + closest[0].id.toString('hex'));
       this._waddleCloser(closest);
    } else if(!peers[0].id.equals(closest[0].id) && mydist > closestdist) {
       this.debug("Peers exist but far away - it's up to us to go to the rally point");
@@ -176,7 +181,8 @@ function twiddle_march(target, closest, initial) {
 	    result_bits[right_index] = target_bits[right_index];
 	    result = bitwise.createBuffer(result_bits);
 	    rdistance = KBucket.distance(result, target);
-	    if(rdistance < xdistance) break;
+	    if(rdistance < xdistance)
+	       return result;
 
 	    if(right_index != left_index) {
 	       result_bits[right_index] = bitwise.not([result_bits[right_index]])[0]
