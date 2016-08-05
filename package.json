@@ -1,40 +1,43 @@
 {
-   "name": "bitboot",
-   "version": "0.0.1",
-   "description": "Bootstrap a distributed p2p network",
-   "main": "index.js",
-   "dependencies": {
-      "bittorrent-dht": "^7.2.2",
-      "k-bucket": "^3.0.1",
-      "debug": "^2.2.0",
-      "bitwise": "^0.2.0"
-   },
-   "devDependencies": {
-      "standard": "^7.0.0",
-      "tape": "^4.4.0"
-   },
-   "scripts": {
-      "test": "standard && tape test/*.js"
-   },
-   "repository": {
-      "type": "git",
-      "url": "git+ssh://git@github.com/8468/bitboot.git"
-   },
-   "keywords": [
-      "dht",
-      "distributed hash table",
-      "protocol",
-      "peer",
-      "p2p",
-      "peer-to-peer",
-      "bootstrap",
-      "torrent",
-      "bittorrent"
-   ],
-   "author": "Tint Foundation",
-   "license": "MIT",
-   "bugs": {
-      "url": "https://github.com/8468/bitboot/issues"
-   },
-   "homepage": "https://github.com/8468/bitboot"
+  "name": "bitboot",
+  "version": "0.0.2",
+  "description": "Bootstrap a distributed p2p network",
+  "main": "index.js",
+  "dependencies": {
+    "bittorrent-dht": "^7.2.2",
+    "k-bucket": "^3.0.1",
+    "debug": "^2.2.0",
+    "bitwise": "^0.2.0"
+  },
+  "bin": {
+    "bitboot": "./bin/cmd.js"
+  },
+  "devDependencies": {
+    "standard": "^7.0.0",
+    "tape": "^4.4.0"
+  },
+  "scripts": {
+    "test": "standard && tape test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/8468/bitboot.git"
+  },
+  "keywords": [
+    "dht",
+    "distributed hash table",
+    "protocol",
+    "peer",
+    "p2p",
+    "peer-to-peer",
+    "bootstrap",
+    "torrent",
+    "bittorrent"
+  ],
+  "author": "Tint Foundation",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/8468/bitboot/issues"
+  },
+  "homepage": "https://github.com/8468/bitboot"
 }

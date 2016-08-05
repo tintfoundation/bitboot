@@ -34,7 +34,7 @@ function Bitboot (rallyName, opts) {
     id[1] = self.rallyId[1]
     id[18] = self.rallyId[18]
     id[19] = self.rallyId[19]
-    self.dht = self._createDHT(id)
+    self.dht = self._createDHT(id, opts.bootstrap !== false)
   }
 }
 
@@ -49,8 +49,8 @@ Bitboot.prototype.destroy = function (cb) {
   }
 }
 
-Bitboot.prototype._createDHT = function (id) {
-  var dht = new DHT({id: id})
+Bitboot.prototype._createDHT = function (id, bootstrap) {
+  var dht = new DHT({id: id, bootstrap: bootstrap})
   var self = this
   var dmsg = 'Joining network with id ' + id.toString('hex') +
 	' (distance to rally ' + KBucket.distance(id, this.rallyId) + ')'
@@ -65,7 +65,7 @@ Bitboot.prototype._createDHT = function (id) {
 
   function onready () {
     self.emit('rejoin', dht.nodeId)
-    if (!self._interval) {
+    if (!self._interval && bootstrap) {
       // first run, so search and set interval for future searches
       self.debug('Searching, and creating interval for future searches')
       search()
@@ -124,8 +124,8 @@ Bitboot.prototype._waddleCloser = function (closest) {
 
   function restart () {
     self.debug('Old DHT connection destroyed')
-    var id = twiddleMarch(self.rallyId, closest[0].id, self.dht.nodeId)
-    self.dht = self._createDHT(id)
+    var id = self._twiddleMarch(closest[0].id)
+    self.dht = self._createDHT(id, true)
     self.dht.on('ready', sayhi)
   }
 
@@ -150,11 +150,11 @@ Bitboot.prototype._extractPeers = function (nodes) {
 }
 
 // This function moves an initial node id closer to the target node id
-// until it beats the closest id.
-function twiddleMarch (target, closest, initial) {
-  var xdistance = KBucket.distance(closest, target)
-  var targetBits = bitwise.readBuffer(target)
-  var resultBits = bitwise.readBuffer(initial)
+// until it beats the closest id.  It returns the new id as a buffer.
+Bitboot.prototype._twiddleMarch = function (closest) {
+  var xdistance = KBucket.distance(closest, this.rallyId)
+  var targetBits = bitwise.readBuffer(this.rallyId)
+  var resultBits = bitwise.readBuffer(this.dht.nodeId)
   var result = null
   var rdistance = null
 
@@ -165,7 +165,7 @@ function twiddleMarch (target, closest, initial) {
       if (resultBits[rightIndex] !== targetBits[rightIndex]) {
         resultBits[rightIndex] = targetBits[rightIndex]
         result = bitwise.createBuffer(resultBits)
-        rdistance = KBucket.distance(result, target)
+        rdistance = KBucket.distance(result, this.rallyId)
         if (rdistance < xdistance) return result
 
         if (rightIndex !== leftIndex) {
