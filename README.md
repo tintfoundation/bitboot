@@ -3,7 +3,7 @@
 [travis-image]: https://img.shields.io/travis/8468/bitboot/master.svg
 [travis-url]: https://travis-ci.org/8468/bitboot
 [npm-image]: https://img.shields.io/npm/v/bitboot.svg
-[npm-url]: https://npmjs.org/package/bitboot-dht
+[npm-url]: https://npmjs.org/package/bitboot
 
 ### P2P Network Bootstrapping
 
