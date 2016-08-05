@@ -9,9 +9,12 @@
       "debug": "^2.2.0",
       "bitwise": "^0.2.0"
    },
-   "devDependencies": {},
+   "devDependencies": {
+      "standard": "^7.0.0",
+      "tape": "^4.4.0"
+   },
    "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
+      "test": "standard && tape test/*.js"
    },
    "repository": {
       "type": "git",
