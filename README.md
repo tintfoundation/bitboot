@@ -1,7 +1,7 @@
 # bitboot [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url]
 
-[travis-image]: https://img.shields.io/travis/8468/bitboot/master.svg
-[travis-url]: https://travis-ci.org/8468/bitboot
+[travis-image]: https://img.shields.io/travis/tintfoundation/bitboot/master.svg
+[travis-url]: https://travis-ci.org/tintfoundation/bitboot
 [npm-image]: https://img.shields.io/npm/v/bitboot.svg
 [npm-url]: https://npmjs.org/package/bitboot
 
