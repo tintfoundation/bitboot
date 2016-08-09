@@ -159,9 +159,9 @@ Bitboot.prototype._twiddleMarch = function (closest) {
   var rdistance = null
 
   for (var leftIndex = 0; leftIndex < resultBits.length; leftIndex++) {
-    // next line - start at length-3 because -1 is last position, then move two to the left
-    // since the last two bytes are already going to match the target
-    for (var rightIndex = resultBits.length - 3; rightIndex >= leftIndex; rightIndex--) {
+    // next line - start at length-17 because -1 is last position, then move two bytes (16 bits)
+    // to the left since the last two bytes are already going to match the target
+    for (var rightIndex = resultBits.length - 17; rightIndex >= leftIndex; rightIndex--) {
       if (resultBits[rightIndex] !== targetBits[rightIndex]) {
         resultBits[rightIndex] = targetBits[rightIndex]
         result = bitwise.createBuffer(resultBits)
