@@ -95,6 +95,10 @@ Bitboot.prototype._search = function () {
 }
 
 Bitboot.prototype._attemptCommunication = function () {
+  if (this.dht.nodes.count() === 0) {
+    this.emit('error', 'Could not connect to any nodes on the DHT.  Are you connected to the internet?')
+    return
+  }
   var closest = this.dht.nodes.closest(this.rallyId, 40)
   var peers = this._extractPeers(closest)
   var mydist = KBucket.distance(this.dht.nodeId, this.rallyId)
