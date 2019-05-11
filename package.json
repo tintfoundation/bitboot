@@ -1,6 +1,6 @@
 {
   "name": "bitboot",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Bootstrap a distributed p2p network",
   "main": "index.js",
   "dependencies": {
