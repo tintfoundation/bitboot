@@ -1,6 +1,6 @@
 {
   "name": "bitboot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Rendezvous for a peer-to-peer network on the BitTorrent mainline DHT",
   "license": "MIT",
   "author": "Tint Foundation",

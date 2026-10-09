@@ -22,5 +22,7 @@ export interface Rendezvous extends EventEmitter<RendezvousEvents> {
     lookup: () => Promise<RendezvousPeer[]>;
 }
 export declare const DEFAULT_ANNOUNCE_INTERVAL_MS: number;
+export declare const DEFAULT_DHT_BOOTSTRAP: readonly string[];
+export declare const resolve_ipv4_bootstrap: (entries: readonly string[]) => Promise<string[]>;
 export declare function rendezvous_info_hash(name: string): Buffer;
 export declare function create_rendezvous({ name, dht_bootstrap, dht_port, announce_interval_ms }: RendezvousOptions): Rendezvous;

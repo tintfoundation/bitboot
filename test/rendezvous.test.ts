@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import DHT from 'bittorrent-dht'
-import { create_rendezvous, rendezvous_info_hash, type Rendezvous } from '../src/index.ts'
+import { create_rendezvous, DEFAULT_DHT_BOOTSTRAP, rendezvous_info_hash, resolve_ipv4_bootstrap, type Rendezvous } from '../src/index.ts'
 
 // Every test runs on a loopback DHT and never touches mainline.
 
@@ -70,4 +70,28 @@ describe('create_rendezvous', () => {
     await expect(member.announce(0)).rejects.toThrow(RangeError)
     await expect(create_rendezvous({ name: 'x' }).lookup()).rejects.toThrow('not started')
   })
+})
+
+describe('resolve_ipv4_bootstrap', () => {
+  test('resolves names to IPv4, keeps literals, and drops names that do not resolve', async () => {
+    expect(await resolve_ipv4_bootstrap(['localhost:6881', '192.0.2.7:25401', 'router.invalid:6881'])).toEqual(['127.0.0.1:6881', '192.0.2.7:25401'])
+  })
+
+  test('passes a list that resolves to nothing on as it was', async () => {
+    expect(await resolve_ipv4_bootstrap(['router.invalid:6881'])).toEqual(['router.invalid:6881'])
+  })
+
+  test('the default routers are host:port entries', () => {
+    for (const entry of DEFAULT_DHT_BOOTSTRAP) expect(entry).toMatch(/^[a-z0-9.-]+:\d+$/)
+  })
+})
+
+// Opt-in: the real mainline DHT. BITBOOT_MAINLINE=1 bun test
+describe.skipIf(process.env.BITBOOT_MAINLINE !== '1')('mainline', () => {
+  test('the default routers fill the routing table', async () => {
+    const member = create_rendezvous({ name: 'bitboot-mainline-check' })
+    started.push(member)
+    await member.start()
+    expect(await member.lookup()).toBeArray()
+  }, 30_000)
 })

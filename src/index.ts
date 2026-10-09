@@ -4,7 +4,9 @@
 // ordinary BEP 5 node. Announcing publishes the announcer's public IP address.
 
 import { createHash } from 'node:crypto'
+import { lookup } from 'node:dns/promises'
 import { EventEmitter } from 'node:events'
+import { isIP } from 'node:net'
 import DHT from 'bittorrent-dht'
 
 export interface RendezvousPeer {
@@ -15,7 +17,7 @@ export interface RendezvousPeer {
 export interface RendezvousOptions {
   // The rendezvous name; the info hash is its SHA-1.
   readonly name: string
-  // DHT bootstrap nodes as host:port. Omit for the mainline defaults.
+  // DHT bootstrap nodes as host:port. Omit for DEFAULT_DHT_BOOTSTRAP.
   readonly dht_bootstrap?: readonly string[]
   // UDP port the DHT listens on; 0 picks a free one.
   readonly dht_port?: number
@@ -45,6 +47,36 @@ export interface Rendezvous extends EventEmitter<RendezvousEvents> {
 
 export const DEFAULT_ANNOUNCE_INTERVAL_MS = 15 * 60 * 1000
 
+// Mainline routers that answered as of 2026-10. bittorrent-dht's own list
+// holds two that no longer do.
+export const DEFAULT_DHT_BOOTSTRAP: readonly string[] = Object.freeze([
+  'dht.libtorrent.org:25401',
+  'dht.transmissionbt.com:6881',
+  'router.bittorrent.com:6881',
+  'router.utorrent.com:6881'
+])
+
+// The DHT's socket is IPv4, but bittorrent-dht resolves a host name with
+// whichever family the system prefers, so a router with an AAAA record first
+// is never reached. Names resolve to IPv4 here; one that does not resolve is
+// dropped, and a list that resolves to nothing is passed on as it was.
+export const resolve_ipv4_bootstrap = async (entries: readonly string[]): Promise<string[]> => {
+  const resolved = await Promise.all(entries.map(async (entry) => {
+    const separator = entry.lastIndexOf(':')
+    const host = entry.slice(0, separator)
+    const port = entry.slice(separator + 1)
+    if (isIP(host) !== 0) return entry
+    try {
+      const { address } = await lookup(host, { family: 4 })
+      return `${address}:${port}`
+    } catch {
+      return null
+    }
+  }))
+  const usable = resolved.filter((entry): entry is string => entry !== null)
+  return usable.length > 0 ? usable : [...entries]
+}
+
 export function rendezvous_info_hash (name: string): Buffer {
   return createHash('sha1').update(name).digest()
 }
@@ -58,6 +90,7 @@ export function create_rendezvous ({
   const info_hash = rendezvous_info_hash(name)
   const emitter = new EventEmitter<RendezvousEvents>()
   let dht: DHT | null = null
+  let starting: Promise<void> | null = null
   let announce_timer: NodeJS.Timeout | null = null
   let announced_port: number | null = null
   let stopped = false
@@ -75,10 +108,11 @@ export function create_rendezvous ({
       })
     })
 
-  const start = (): Promise<void> => {
-    if (dht) return Promise.resolve()
+  const join = async (): Promise<void> => {
     stopped = false
-    const created = new DHT(dht_bootstrap ? { bootstrap: [...dht_bootstrap] } : {})
+    const bootstrap = await resolve_ipv4_bootstrap(dht_bootstrap ?? DEFAULT_DHT_BOOTSTRAP)
+    if (stopped) return
+    const created = new DHT({ bootstrap })
     dht = created
     created.on('peer', (peer, peer_info_hash) => {
       if (peer_info_hash.equals(info_hash)) {
@@ -87,10 +121,16 @@ export function create_rendezvous ({
     })
     created.on('error', (error) => emitter.emit('error', error))
     created.on('warning', (error) => emitter.emit('warning', error))
-    return new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       created.once('ready', () => resolve())
       created.listen(dht_port)
     })
+  }
+
+  const start = async (): Promise<void> => {
+    if (dht) return
+    starting ??= join().finally(() => { starting = null })
+    await starting
   }
 
   const stop = (): Promise<void> => {
