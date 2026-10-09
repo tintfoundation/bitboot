@@ -1,0 +1,16 @@
+{
+  // The shipped build. Node types only, so a Bun API in src/ fails here:
+  // record-app embeds record-node, and with it this package, under Node.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "newLine": "lf"
+  },
+  "include": ["src"]
+}

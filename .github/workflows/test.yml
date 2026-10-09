@@ -1,0 +1,40 @@
+name: Test
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+
+      # No dependency lifecycle script runs: package.json carries an empty
+      # trustedDependencies, and --ignore-scripts covers the root package too.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Verify (lint, typecheck, dist is current)
+        run: bun run verify
+
+      - name: Test
+        run: bun test
+
+      # The shipped build loads under plain Node at the engine floor.
+      - name: Load dist under Node
+        run: node --input-type=module -e "import('./dist/index.js').then((m) => { if (typeof m.create_rendezvous !== 'function') process.exit(1) })"
